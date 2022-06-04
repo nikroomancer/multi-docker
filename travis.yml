@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nikroomancer/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true nikroomancer/react npm test
+
+after_success:
+  - docker build -t nikroomancer/multi-client ./client
+  - docker build -t nikroomancer/multi-nginx ./nginx
+  - docker build -t nikroomancer/multi-server ./server
+  - docker build -t nikroomancer/multi-worker ./worker
+  #login to docker cli (so it associates with your docker account)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #take images and push to docker hub
+  - docker push nikroomancer/multi-client
+  - docker push nikroomancer/multi-nginx
+  - docker push nikroomancer/multi-server
+  - docker push nikroomancer/multi-worker
